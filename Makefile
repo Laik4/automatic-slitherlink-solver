@@ -1,2 +1,3 @@
-solver: src/solver.cpp
-	g++ -o solver solver.cpp
+SOURCE_FOLDER=src
+solver: $(SOURCE_FOLDER)/solver.cpp
+	g++ -o solver $<
