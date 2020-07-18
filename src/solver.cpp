@@ -8,17 +8,21 @@
 
 using namespace std;
 
+
 class Vertex{
 private:
     int indegree;
     int outdegree;
+    int maxedge;
 public:
 
 };
 
+
 class Grid{
 private:
-    vector<vector<int>> grid;
+    vector<vector<int>> constraint;
+    vector<vector<Vertex>> vertex; 
     int height;
     int width;
 public:
@@ -27,6 +31,16 @@ public:
 
 };
 
+class Solver{
+private:
+    bool satistied(Grid g){
+        return true;
+
+    }
+
+public:
+
+};
 int Grid::load(string filename){
     ifstream ifs(filename);
     if(!ifs){
@@ -37,7 +51,7 @@ int Grid::load(string filename){
     string buf;
     ifs >> height >> width;
     getline(ifs, buf);
-    this->grid.resize(height, vector<int>(width, -1));
+    this->constraint.resize(height, vector<int>(width, -1));
 
     for(int h = 0; h < height; ++h){
         for(int w = 0; w < width; ++w){
@@ -47,7 +61,7 @@ int Grid::load(string filename){
                 continue;
             }else{
                 assert('0' <= buf and buf <= '3');
-                this->grid[h][w] = buf-'0'; 
+                this->constraint[h][w] = buf-'0'; 
             }
         }
     }
@@ -56,33 +70,33 @@ int Grid::load(string filename){
 }
 
 void Grid::show(void){
-    cout << "┌";
+    cout << "┌─";
     for(int i = 0; i < this->width-1; ++i){
-        cout << "─┬";
+        cout << "──┬─";
     }
-    cout << "─┐\n";
+    cout << "──┐\n";
 
     for(int h = 0; h < this->height; ++h){
-        cout << "│";
+        cout << "│ ";
         for(int w = 0; w < this->width; ++w){
             char num = ' ';
-            if(this->grid[h][w] >= 0) num = this->grid[h][w]+'0';
-            cout << num << "│";
+            if(this->constraint[h][w] >= 0) num = this->constraint[h][w]+'0';
+            cout << num << " │ ";
         }
         cout << '\n';
 
         if(h < this->height-1){
-            cout << "├";
+            cout << "├─";
             for(int i = 0; i < this->width-1; ++i){
-                cout << "─┼";
+                cout << "──┼─";
             }
-            cout << "─┤";
+            cout << "──┤";
         }else{
-            cout << "└";
+            cout << "└─";
             for(int i = 0; i < this->width-1; ++i){
-                cout << "─┴";
+                cout << "──┴─";
             }
-            cout << "─┘\n";
+            cout << "──┘\n";
         }
         cout << '\n';
     }
