@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <cassert>
 
+#define DEBUG 
+
 using namespace std;
 
 
@@ -33,9 +35,9 @@ public:
 
 class Puzzle{
 private:
+public:
     vector<vector<Vertex>> vertex;
     vector<vector<Edge>> edge;
-public:
     vector<vector<int>> constraint;
     int rows;
     int cols;
@@ -47,10 +49,16 @@ public:
         if(r1 == r2){
             // -
             this->edge[2*r1][c1] = status;
+#ifdef DEBUG
+            cerr << "[+] set_edge: (" << r1 << ", " << c1 << ")-(" << r2 << ", " << c2 << ") [Edge ("<< 2*r1 << ", " << c1 << ")] <= " << status << '\n';
+#endif
         }
         if(c1 == c2){
             // |
             this->edge[2*r1+1][c1] = status;
+#ifdef DEBUG
+            cerr << "[+] set_edge: (" << r1 << ", " << c1 << ")-(" << r2 << ", " << c2 << ") [Edge ("<< 2*r1+1 << ", " << c1 << ")] <= " << status << '\n';
+#endif
         }
     }
 
@@ -75,10 +83,16 @@ private:
                 }
             }
         }
-
     }
 
 public:
+    Solver(Puzzle p){
+        this->puzzle = p;
+    }
+    void solve(){
+        this->prune_zero();
+        this->puzzle.show();
+    }
 
 };
 
@@ -129,29 +143,32 @@ void Puzzle::show(void){
             char num = ' ';
             if(this->constraint[r][c] >= 0) num = this->constraint[r][c]+'0';
             cout << num;
-            cout << ((this->edge[2*r+1][c].status == 2) ? " x " : " │ ");
+            cout << ((this->edge[2*r+1][c+1].status == 2) ? " x " : " │ ");
         }
         cout << '\n';
 
         if(r < this->rows-1){
             cout << "├─";
-            for(int c = 0; c < this->cols-1; ++c){
-                cout << ((this->edge[2*r][c].status == 2) ? "x" : "─");
-                cout << "─┼─";
+            for(int c = 0; c < this->cols; ++c){
+                cout << ((this->edge[2*r+2][c].status == 2) ? "x" : "─");
+                if(c < this->cols-1){
+                    cout << "─┼─";
+                }else{
+                    cout << "─┤\n";
+                }
             }
-            cout << "──┤\n";
         }
     }
 
     cout << "└─";
-        for(int c = 0; c < this->cols; ++c){
-            cout << ((this->edge[2*this->rows][c].status == 2) ? "x" : "─");
-            if(c < this->cols-1){
-                cout << "─┴─";
-            }else{
-                cout << "─┘\n";
-            }
+    for(int c = 0; c < this->cols; ++c){
+        cout << ((this->edge[2*this->rows][c].status == 2) ? "x" : "─");
+        if(c < this->cols-1){
+            cout << "─┴─";
+        }else{
+            cout << "─┘\n";
         }
+    }
 
 }
 
@@ -160,7 +177,8 @@ int main(){
 
     Puzzle p;
     p.load("samples/easy01.txt");
-    p.show();
+    Solver s(p);
+    s.solve();
 
     return 0;
 }
