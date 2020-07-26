@@ -46,11 +46,11 @@ public:
         assert(r1 == r2 or c1 == c2);
         if(r1 == r2){
             // -
-            this->edge[r1<<1][c1] = status;
+            this->edge[2*r1][c1] = status;
         }
         if(c1 == c2){
             // |
-            this->edge[r1][c1<<1] = status;
+            this->edge[2*r1+1][c1] = status;
         }
     }
 
@@ -140,15 +140,19 @@ void Puzzle::show(void){
                 cout << "─┼─";
             }
             cout << "──┤\n";
-        }else{
-            cout << "└─";
-            for(int c = 0; c < this->cols-1; ++c){
-                cout << ((this->edge[2*this->rows][c].status == 2) ? "x" : "─");
-                cout << "─┴─";
-            }
-            cout << "──┘\n";
         }
     }
+
+    cout << "└─";
+        for(int c = 0; c < this->cols; ++c){
+            cout << ((this->edge[2*this->rows][c].status == 2) ? "x" : "─");
+            if(c < this->cols-1){
+                cout << "─┴─";
+            }else{
+                cout << "─┘\n";
+            }
+        }
+
 }
 
 
