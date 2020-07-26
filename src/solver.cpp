@@ -176,7 +176,7 @@ void Puzzle::show(void){
 int main(){
 
     Puzzle p;
-    p.load("samples/easy01.txt");
+    p.load("samples/normal01.txt");
     Solver s(p);
     s.solve();
 
