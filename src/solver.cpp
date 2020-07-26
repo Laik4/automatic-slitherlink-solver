@@ -19,12 +19,12 @@ public:
 };
 
 
-class Grid{
+class Puzzle{
 private:
     vector<vector<int>> constraint;
-    vector<vector<Vertex>> vertex; 
-    int height;
-    int width;
+    vector<vector<Vertex>> vertex;
+    int rows;
+    int cols;
 public:
     int load(string filename);
     void show(void);
@@ -33,7 +33,7 @@ public:
 
 class Solver{
 private:
-    bool satistied(Grid g){
+    bool satistied(Puzzle g){
         return true;
 
     }
@@ -41,7 +41,8 @@ private:
 public:
 
 };
-int Grid::load(string filename){
+
+int Puzzle::load(string filename){
     ifstream ifs(filename);
     if(!ifs){
         cerr << "Can't open " << filename << ". \n";
@@ -49,12 +50,13 @@ int Grid::load(string filename){
     }
 
     string buf;
-    ifs >> height >> width;
+    ifs >> rows >> cols;
     getline(ifs, buf);
-    this->constraint.resize(height, vector<int>(width, -1));
+    this->constraint.resize(rows, vector<int>(cols, -1));
+    this->vertex.resize(rows+1, vector<Vertex>(cols+1));
 
-    for(int h = 0; h < height; ++h){
-        for(int w = 0; w < width; ++w){
+    for(int h = 0; h < rows; ++h){
+        for(int w = 0; w < cols; ++w){
             char buf;
             ifs >> buf;
             if(buf == 'x'){
@@ -69,31 +71,31 @@ int Grid::load(string filename){
     return 0;
 }
 
-void Grid::show(void){
+void Puzzle::show(void){
     cout << "┌─";
-    for(int i = 0; i < this->width-1; ++i){
+    for(int i = 0; i < this->cols-1; ++i){
         cout << "──┬─";
     }
     cout << "──┐\n";
 
-    for(int h = 0; h < this->height; ++h){
+    for(int h = 0; h < this->rows; ++h){
         cout << "│ ";
-        for(int w = 0; w < this->width; ++w){
+        for(int w = 0; w < this->cols; ++w){
             char num = ' ';
             if(this->constraint[h][w] >= 0) num = this->constraint[h][w]+'0';
             cout << num << " │ ";
         }
         cout << '\n';
 
-        if(h < this->height-1){
+        if(h < this->rows-1){
             cout << "├─";
-            for(int i = 0; i < this->width-1; ++i){
+            for(int i = 0; i < this->cols-1; ++i){
                 cout << "──┼─";
             }
             cout << "──┤";
         }else{
             cout << "└─";
-            for(int i = 0; i < this->width-1; ++i){
+            for(int i = 0; i < this->cols-1; ++i){
                 cout << "──┴─";
             }
             cout << "──┘\n";
@@ -105,9 +107,9 @@ void Grid::show(void){
 
 int main(){
 
-    Grid g;
-    g.load("samples/easy01.txt");
-    g.show();
+    Puzzle p;
+    p.load("samples/easy01.txt");
+    p.show();
 
     return 0;
 }
