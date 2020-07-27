@@ -8,7 +8,8 @@
 #include <stack>
 #include <utility>
 
-#define DEBUG 
+//#define DEBUG 
+#define NO_LINE_CHAR "\e[2mx\e[m"
 
 using namespace std;
 
@@ -236,8 +237,6 @@ public:
     void solve(){
         this->prune_zero();
         this->prune_deadend();
-        this->show_degree();
-        this->show_status();
         this->puzzle.show();
     }
 
@@ -251,32 +250,32 @@ int Puzzle::load(string filename){
     }
 
     string buf;
-    ifs >> rows >> cols;
+    ifs >> this->rows >> this->cols;
     getline(ifs, buf);
-    this->constraint.resize(rows, vector<int>(cols, -1));
-    this->vertex.resize(rows+1, vector<Vertex>(cols+1));
-    this->edge.resize(2*rows+1, vector<Edge>(cols+1));
+    this->constraint.resize(this->rows, vector<int>(this->cols, -1));
+    this->vertex.resize(this->rows+1, vector<Vertex>(this->cols+1));
+    this->edge.resize(2*this->rows+1, vector<Edge>(this->cols+1));
 
     // init vertex
-    for(int r = 0; r <= rows; ++r){
-        for(int c = 0; c <= cols; ++c){
+    for(int r = 0; r <= this->rows; ++r){
+        for(int c = 0; c <= this->cols; ++c){
             int deg = 4;
-            if(r == 0 or r == rows) --deg;
-            if(c == 0 or c == cols) --deg;
+            if(r == 0 or r == this->rows) --deg;
+            if(c == 0 or c == this->cols) --deg;
             vertex[r][c].degree = deg;
         }
     }
 
     // init edge
-    for(int r = 0; r <= 2*rows; ++r){
-        for(int c = 0; c <= cols; ++c){
+    for(int r = 0; r <= 2*this->rows; ++r){
+        for(int c = 0; c <= this->cols; ++c){
             edge[r][c] = 0;
         }
     }
 
     // load constraints
-    for(int r = 0; r < rows; ++r){
-        for(int c = 0; c < cols; ++c){
+    for(int r = 0; r < this->rows; ++r){
+        for(int c = 0; c < this->cols; ++c){
             char buf;
             ifs >> buf;
             if(buf == 'x'){
@@ -294,7 +293,7 @@ int Puzzle::load(string filename){
 void Puzzle::show(void){
     cout << "┌─";
     for(int c = 0; c < this->cols; ++c){
-        cout << ((this->edge[0][c].status == 2) ? "x" : "─");
+        cout << ((this->edge[0][c].status == 2) ? NO_LINE_CHAR : "─");
         if(c < this->cols-1){
             cout << "─┬─";
         }else{
@@ -303,19 +302,19 @@ void Puzzle::show(void){
     }
 
     for(int r = 0; r < this->rows; ++r){
-        cout << ((this->edge[2*r+1][0].status == 2) ? "x " : "│ ");
+        cout << ((this->edge[2*r+1][0].status == 2) ? NO_LINE_CHAR : "│");
         for(int c = 0; c < this->cols; ++c){
-            char num = ' ';
-            if(this->constraint[r][c] >= 0) num = this->constraint[r][c]+'0';
+            string num = "   ";
+            if(this->constraint[r][c] >= 0) num[1] = this->constraint[r][c]+'0';
             cout << num;
-            cout << ((this->edge[2*r+1][c+1].status == 2) ? " x " : " │ ");
+            cout << ((this->edge[2*r+1][c+1].status == 2) ? NO_LINE_CHAR : "│");
         }
         cout << '\n';
 
         if(r < this->rows-1){
             cout << "├─";
             for(int c = 0; c < this->cols; ++c){
-                cout << ((this->edge[2*r+2][c].status == 2) ? "x" : "─");
+                cout << ((this->edge[2*r+2][c].status == 2) ? NO_LINE_CHAR : "─");
                 if(c < this->cols-1){
                     cout << "─┼─";
                 }else{
@@ -327,7 +326,7 @@ void Puzzle::show(void){
 
     cout << "└─";
     for(int c = 0; c < this->cols; ++c){
-        cout << ((this->edge[2*this->rows][c].status == 2) ? "x" : "─");
+        cout << ((this->edge[2*this->rows][c].status == 2) ? NO_LINE_CHAR : "─");
         if(c < this->cols-1){
             cout << "─┴─";
         }else{

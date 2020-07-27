@@ -1,7 +1,7 @@
 6 7
 x02x1x3
-xxxxxxx
-xxx3x31
-30xxx30
+0xxxxxx
+xx03x31
+30x0x30
 31x2xxx
 3x3x02x
