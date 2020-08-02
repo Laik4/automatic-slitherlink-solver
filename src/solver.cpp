@@ -9,15 +9,17 @@
 #include <utility>
 
 //#define DEBUG 
-#define NO_LINE_CHAR "\e[2mx\e[m"
+#define PROHIBITED_CHAR "\e[2mx\e[m"
 #define DECIDED_COLOR "\e[31"+(c)+"\e[m"
+
 #define UP    0
 #define LEFT  1
 #define DOWN  2
 #define RIGHT 3
+
 #define PROHIBITED -1
-#define PENDING 0
-#define DECIDED 1
+#define PENDING     0
+#define DECIDED     1
 
 using namespace std;
 
@@ -385,7 +387,7 @@ int Puzzle::load(string filename){
 void Puzzle::show(void){
     cout << "┌─";
     for(int c = 0; c < this->cols; ++c){
-        cout << ((this->edge[0][c].status == PROHIBITED) ? NO_LINE_CHAR : "─");
+        cout << ((this->edge[0][c].status == PROHIBITED) ? PROHIBITED_CHAR : "─");
         if(c < this->cols-1){
             cout << "─┬─";
         }else{
@@ -394,19 +396,19 @@ void Puzzle::show(void){
     }
 
     for(int r = 0; r < this->rows; ++r){
-        cout << ((this->edge[2*r+1][0].status == PROHIBITED) ? NO_LINE_CHAR : "│");
+        cout << ((this->edge[2*r+1][0].status == PROHIBITED) ? PROHIBITED_CHAR : "│");
         for(int c = 0; c < this->cols; ++c){
             string num = "   ";
             if(this->constraint[r][c] >= 0) num[1] = this->constraint[r][c]+'0';
             cout << num;
-            cout << ((this->edge[2*r+1][c+1].status == PROHIBITED) ? NO_LINE_CHAR : "│");
+            cout << ((this->edge[2*r+1][c+1].status == PROHIBITED) ? PROHIBITED_CHAR : "│");
         }
         cout << '\n';
 
         if(r < this->rows-1){
             cout << "├─";
             for(int c = 0; c < this->cols; ++c){
-                cout << ((this->edge[2*r+2][c].status == PROHIBITED) ? NO_LINE_CHAR : "─");
+                cout << ((this->edge[2*r+2][c].status == PROHIBITED) ? PROHIBITED_CHAR : "─");
                 if(c < this->cols-1){
                     cout << "─┼─";
                 }else{
@@ -418,7 +420,7 @@ void Puzzle::show(void){
 
     cout << "└─";
     for(int c = 0; c < this->cols; ++c){
-        cout << ((this->edge[2*this->rows][c].status == PROHIBITED) ? NO_LINE_CHAR : "─");
+        cout << ((this->edge[2*this->rows][c].status == PROHIBITED) ? PROHIBITED_CHAR : "─");
         if(c < this->cols-1){
             cout << "─┴─";
         }else{
