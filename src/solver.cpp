@@ -45,7 +45,6 @@ public:
 
 class Edge{
 private:
-// status 0: not decided, 1: line, 2: no line
 public:
     int status;
     Edge& operator=(int x){
@@ -77,8 +76,10 @@ public:
     int cols;
     int load(string filename);
     void show(void);
+
+
+    // get the status of an edge which connects (r1, c1) and (r2, c2)
     Edge get_edge(int r1, int c1, int r2, int c2){
-        // get the status of an edge which connects (r1, c1) and (r2, c2)
         assert(r1 == r2 or c1 == c2);
         bool out_of_range = r1 < 0 or this->rows < r1
                          or r2 < 0 or this->rows < r2
@@ -89,8 +90,32 @@ public:
         if(c1 > c2) swap(c1, c2);
         return this->edge[2*r1+(c1==c2)][c1].status;
     }
+
+    // get the status of an edge by specifying the position of a constraint and where edge locates
+    Edge get_edge(int r, int c, int direction){
+        bool out_of_range = r < 0 or this->rows < r 
+                         or c < 0 or this->cols < c;
+        if(out_of_range)  return Edge(-1);
+        Edge e;
+        switch(direction){
+            case UP:
+                e = this->edge[2*r][c].status;
+                break;
+            case LEFT:
+                e = this->edge[2*r+1][c].status;
+                break;
+            case DOWN:
+                e = this->edge[2*r+2][c].status;
+                break;
+            case RIGHT:
+                e = this->edge[2*r+1][c+1].status;
+                break;
+        }
+        return e;
+    }
+
+    // set the status of an edge by specifying two vertices (r1, c1) and (r2, c2) 
     void set_edge(int r1, int c1, int r2, int c2, int status){
-        // set the status of an edge which connects (r1, c1) and (r2, c2)
         assert(PROHIBITED <= status and status <= DECIDED);
         assert(r1 == r2 or c1 == c2);
         bool out_of_range = r1 < 0 or this->rows < r1 
@@ -115,6 +140,7 @@ public:
 
     }
 
+    // set the status of an edge by specifying the position of a constraint and where edge locates
     void set_edge(int r, int c, int direction, int status){
         // direction   [0:up] [1:left] [2:down] [3:left]
         assert(PROHIBITED <= status and status <= DECIDED);
@@ -123,26 +149,27 @@ public:
         if(out_of_range)  return;
 
         // Update the status of an edge and the degree of each vertex
+        int d_degree = (status == PROHIBITED) ? -1 : 0;
         switch(direction){
             case UP:
                 this->edge[2*r][c].status = status;
-                this->vertex[r][c].degree += status;
-                this->vertex[r][c+1].degree += status;
+                this->vertex[r][c].degree += d_degree;
+                this->vertex[r][c+1].degree += d_degree;
                 break;
             case LEFT:
                 this->edge[2*r+1][c].status = status;
-                this->vertex[r][c].degree += status;
-                this->vertex[r+1][c].degree += status;
+                this->vertex[r][c].degree += d_degree;
+                this->vertex[r+1][c].degree += d_degree;
                 break;
             case DOWN:
                 this->edge[2*r+2][c].status = status;
-                this->vertex[r+1][c].degree += status;
-                this->vertex[r+1][c+1].degree += status;
+                this->vertex[r+1][c].degree += d_degree;
+                this->vertex[r+1][c+1].degree += d_degree;
                 break;
             case RIGHT:
                 this->edge[2*r+1][c+1].status = status;
-                this->vertex[r][c+1].degree += status;
-                this->vertex[r+1][c+1].degree += status;
+                this->vertex[r][c+1].degree += d_degree;
+                this->vertex[r+1][c+1].degree += d_degree;
                 break;
         }
         
@@ -171,22 +198,20 @@ private:
         }
     }
     int determine_by_prohibited(){
-        int d[5] = {0, 0, 1, 1};
         for(int r = 0; r < puzzle.rows; ++r){
             for(int c = 0; c < puzzle.cols; ++c){
                 // count the number of prohibited edges around (r, c)
                 int prohibited_num = 0;
-                for(int i = 0; i < 5; ++i){
-                    if(puzzle.get_edge(r+d[i], c+d[(i+1)%4], r+d[(i+1)%4], c+d[(i+2)%4]) == PROHIBITED){
+                for(int i = 0; i < 4; ++i){
+                    if(puzzle.get_edge(r, c, i) == PROHIBITED){
                         ++prohibited_num;
                     }
                 }
+                cerr << "(" << r << ", " << c << "): " << prohibited_num << '\n';
                 if(puzzle.constraint[r][c] == 4-prohibited_num){
-                    for(int i = 0; i < 5; ++i){
-                        if(puzzle.get_edge(r+d[i], c+d[(i+1)%4], r+d[(i+1)%4], c+d[(i+2)%4]) == PENDING){
-                            ++puzzle.vertex[r+d[i]][c+d[(i+1)%4]].degree;
-                            ++puzzle.vertex[r+d[(i+1)%4]][c+d[(i+2)%4]].degree;
-                            puzzle.set_edge(r+d[i], c+d[(i+1)%4], r+d[(i+1)%4], c+d[(i+2)%4], DECIDED);
+                    for(int i = 0; i < 4; ++i){
+                        if(puzzle.get_edge(r, c, i) == PENDING){
+                            puzzle.set_edge(r, c, i, DECIDED);
                         }
                     }
                 }else if(puzzle.constraint[r][c] > 4-prohibited_num){
