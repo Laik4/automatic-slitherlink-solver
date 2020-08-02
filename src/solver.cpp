@@ -10,6 +10,14 @@
 
 //#define DEBUG 
 #define NO_LINE_CHAR "\e[2mx\e[m"
+#define DECIDED_COLOR "\e[31"+(c)+"\e[m"
+#define UP    0
+#define LEFT  1
+#define DOWN  2
+#define RIGHT 3
+#define PROHIBITED -1
+#define PENDING 0
+#define DECIDED 1
 
 using namespace std;
 
@@ -83,7 +91,7 @@ public:
     }
     void set_edge(int r1, int c1, int r2, int c2, int status){
         // set the status of an edge which connects (r1, c1) and (r2, c2)
-        assert(0 <= status and status <= 2);
+        assert(PROHIBITED <= status and status <= DECIDED);
         assert(r1 == r2 or c1 == c2);
         bool out_of_range = r1 < 0 or this->rows < r1 
                          or r2 < 0 or this->rows < r2 
@@ -107,6 +115,39 @@ public:
 
     }
 
+    void set_edge(int r, int c, int direction, int status){
+        // direction   [0:up] [1:left] [2:down] [3:left]
+        assert(PROHIBITED <= status and status <= DECIDED);
+        bool out_of_range = r < 0 or this->rows < r 
+                         or c < 0 or this->cols < c;
+        if(out_of_range)  return;
+
+        // Update the status of an edge and the degree of each vertex
+        switch(direction){
+            case UP:
+                this->edge[2*r][c].status = status;
+                this->vertex[r][c].degree += status;
+                this->vertex[r][c+1].degree += status;
+                break;
+            case LEFT:
+                this->edge[2*r+1][c].status = status;
+                this->vertex[r][c].degree += status;
+                this->vertex[r+1][c].degree += status;
+                break;
+            case DOWN:
+                this->edge[2*r+2][c].status = status;
+                this->vertex[r+1][c].degree += status;
+                this->vertex[r+1][c+1].degree += status;
+                break;
+            case RIGHT:
+                this->edge[2*r+1][c+1].status = status;
+                this->vertex[r][c+1].degree += status;
+                this->vertex[r+1][c+1].degree += status;
+                break;
+        }
+        
+    }
+
 
 };
 
@@ -121,19 +162,39 @@ private:
         for(int r = 0; r < puzzle.rows; ++r){
             for(int c = 0; c < puzzle.cols; ++c){
                 if(puzzle.constraint[r][c] == 0){
-                    puzzle.vertex[r][c].degree -= 2;
-                    puzzle.vertex[r][c+1].degree -= 2;
-                    puzzle.vertex[r+1][c].degree -= 2;
-                    puzzle.vertex[r+1][c+1].degree -= 2;
+                    for(int i = 0; i < 4; ++i){
+                        puzzle.set_edge(r, c, i, PROHIBITED);
 
-
-                    puzzle.set_edge(r, c, r, c+1, 2);
-                    puzzle.set_edge(r, c, r+1, c, 2);
-                    puzzle.set_edge(r, c+1, r+1, c+1, 2);
-                    puzzle.set_edge(r+1, c, r+1, c+1, 2);
+                    }
                 }
             }
         }
+    }
+    int determine_by_prohibited(){
+        int d[5] = {0, 0, 1, 1};
+        for(int r = 0; r < puzzle.rows; ++r){
+            for(int c = 0; c < puzzle.cols; ++c){
+                // count the number of prohibited edges around (r, c)
+                int prohibited_num = 0;
+                for(int i = 0; i < 5; ++i){
+                    if(puzzle.get_edge(r+d[i], c+d[(i+1)%4], r+d[(i+1)%4], c+d[(i+2)%4]) == PROHIBITED){
+                        ++prohibited_num;
+                    }
+                }
+                if(puzzle.constraint[r][c] == 4-prohibited_num){
+                    for(int i = 0; i < 5; ++i){
+                        if(puzzle.get_edge(r+d[i], c+d[(i+1)%4], r+d[(i+1)%4], c+d[(i+2)%4]) == PENDING){
+                            ++puzzle.vertex[r+d[i]][c+d[(i+1)%4]].degree;
+                            ++puzzle.vertex[r+d[(i+1)%4]][c+d[(i+2)%4]].degree;
+                            puzzle.set_edge(r+d[i], c+d[(i+1)%4], r+d[(i+1)%4], c+d[(i+2)%4], DECIDED);
+                        }
+                    }
+                }else if(puzzle.constraint[r][c] > 4-prohibited_num){
+                    return -1;
+                }
+            }
+        }
+        return 0;
     }
 
     void prune_deadend(){
@@ -141,7 +202,7 @@ private:
 
         for(int r = 0; r <= puzzle.rows; ++r){
             for(int c = 0; c <= puzzle.cols; ++c){
-                if(puzzle.vertex[r][c].degree == 1){
+                if(puzzle.vertex[r][c].degree == DECIDED){
                     --puzzle.vertex[r][c].degree;
                     q.emplace(r, c);
                 }
@@ -157,11 +218,11 @@ private:
                                  or C < 0 or puzzle.cols < C;
                 if(out_of_range) continue;
 
-                bool line_prohibited = puzzle.get_edge(r, c, R, C) == 2;
+                bool line_prohibited = puzzle.get_edge(r, c, R, C) == PROHIBITED;
                 if(line_prohibited) continue;
                 if(puzzle.vertex[R][C].degree > 0){
                     --puzzle.vertex[R][C].degree;
-                    puzzle.set_edge(r, c, R, C, 2);
+                    puzzle.set_edge(r, c, R, C, PROHIBITED);
                 }
                 bool degree_is_1 = puzzle.vertex[R][C].degree == 1;
                 if(degree_is_1){
@@ -238,6 +299,12 @@ public:
         this->prune_zero();
         this->prune_deadend();
         this->puzzle.show();
+        this->show_degree();
+        this->show_status();
+        this->determine_by_prohibited();
+        this->puzzle.show();
+        this->show_degree();
+        this->show_status();
     }
 
 };
@@ -293,7 +360,7 @@ int Puzzle::load(string filename){
 void Puzzle::show(void){
     cout << "┌─";
     for(int c = 0; c < this->cols; ++c){
-        cout << ((this->edge[0][c].status == 2) ? NO_LINE_CHAR : "─");
+        cout << ((this->edge[0][c].status == PROHIBITED) ? NO_LINE_CHAR : "─");
         if(c < this->cols-1){
             cout << "─┬─";
         }else{
@@ -302,19 +369,19 @@ void Puzzle::show(void){
     }
 
     for(int r = 0; r < this->rows; ++r){
-        cout << ((this->edge[2*r+1][0].status == 2) ? NO_LINE_CHAR : "│");
+        cout << ((this->edge[2*r+1][0].status == PROHIBITED) ? NO_LINE_CHAR : "│");
         for(int c = 0; c < this->cols; ++c){
             string num = "   ";
             if(this->constraint[r][c] >= 0) num[1] = this->constraint[r][c]+'0';
             cout << num;
-            cout << ((this->edge[2*r+1][c+1].status == 2) ? NO_LINE_CHAR : "│");
+            cout << ((this->edge[2*r+1][c+1].status == PROHIBITED) ? NO_LINE_CHAR : "│");
         }
         cout << '\n';
 
         if(r < this->rows-1){
             cout << "├─";
             for(int c = 0; c < this->cols; ++c){
-                cout << ((this->edge[2*r+2][c].status == 2) ? NO_LINE_CHAR : "─");
+                cout << ((this->edge[2*r+2][c].status == PROHIBITED) ? NO_LINE_CHAR : "─");
                 if(c < this->cols-1){
                     cout << "─┼─";
                 }else{
@@ -326,7 +393,7 @@ void Puzzle::show(void){
 
     cout << "└─";
     for(int c = 0; c < this->cols; ++c){
-        cout << ((this->edge[2*this->rows][c].status == 2) ? NO_LINE_CHAR : "─");
+        cout << ((this->edge[2*this->rows][c].status == PROHIBITED) ? NO_LINE_CHAR : "─");
         if(c < this->cols-1){
             cout << "─┴─";
         }else{
