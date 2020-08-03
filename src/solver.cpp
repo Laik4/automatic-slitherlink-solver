@@ -59,6 +59,9 @@ public:
     bool operator!=(const int x){
         return !(*this == x);
     }
+    operator int() const {
+        return status;
+    }
     Edge(){
     }
     Edge(int x){
@@ -193,7 +196,6 @@ private:
                 if(puzzle.constraint[r][c] == 0){
                     for(int i = 0; i < 4; ++i){
                         puzzle.set_edge(r, c, i, PROHIBITED);
-
                     }
                 }
             }
@@ -275,46 +277,91 @@ private:
         }
     }
     void show_status(){
-        cout << "┌─";
+        cout << "┌";
         for(int c = 0; c < puzzle.cols; ++c){
-            cout << (puzzle.edge[0][c].status);
-            if(c < puzzle.cols-1){
-                cout << "─┬─";
-            }else{
-                cout << "─┐\n";
+            int e = static_cast<int>(puzzle.get_edge(0, c, UP));
+            switch(e){
+                case PROHIBITED:
+                    cout << " ";
+                    cout << "X";
+                    cout << " ";
+                    break;
+                case PENDING:
+                    cout << "─";
+                    cout << "?";
+                    cout << "─";
+                    break;
+                case DECIDED:
+                    cout << "─";
+                    cout << "O";
+                    cout << "─";
+                    break;
             }
+            cout << ((c < puzzle.cols-1) ? "┬" : "┐");
         }
+        cout << '\n';
 
         for(int r = 0; r < puzzle.rows; ++r){
-            cout << (puzzle.edge[2*r+1][0].status);
+            int e = static_cast<int>(puzzle.get_edge(r, 0, LEFT));
+            switch(e){
+                case PROHIBITED:
+                    cout << "X";
+                    break;
+                case PENDING:
+                    cout << "?";
+                    break;
+                case DECIDED:
+                    cout << "O";
+                    break;
+            }
+
             for(int c = 0; c < puzzle.cols; ++c){
                 cout << "   ";
-                cout << (puzzle.edge[2*r+1][c+1].status);
+                e = static_cast<int>(puzzle.get_edge(r, c, RIGHT)); 
+                switch(e){
+                    case PROHIBITED:
+                        cout << "X";
+                        break;
+                    case PENDING:
+                        cout << "?";
+                        break;
+                    case DECIDED:
+                        cout << "O";
+                        break;
+                }
             }
             cout << '\n';
 
-            if(r < puzzle.rows-1){
-                cout << "├─";
-                for(int c = 0; c < puzzle.cols; ++c){
-                    cout << puzzle.edge[2*r+2][c].status;
-                    if(c < puzzle.cols-1){
-                        cout << "─┼─";
-                    }else{
-                        cout << "─┤\n";
-                    }
+            cout << ((r < puzzle.rows-1) ? "├" : "└");
+            for(int c = 0; c < puzzle.cols; ++c){
+                e = static_cast<int>(puzzle.get_edge(r, c, DOWN));
+                switch(e){
+                    case PROHIBITED:
+                        cout << " ";
+                        cout << "X";
+                        cout << " ";
+                        break;
+                    case PENDING:
+                        cout << "─";
+                        cout << "?";
+                        cout << "─";
+                        break;
+                    case DECIDED:
+                        cout << "─";
+                        cout << "O";
+                        cout << "─";
+                        break;
+                }
+
+                if(r < puzzle.rows-1){
+                    cout << ((c < puzzle.cols-1) ? "┼" : "┤");
+                }else{
+                    cout << ((c < puzzle.cols-1) ? "┴" : "┘");
                 }
             }
+            cout << '\n';
         }
-
-        cout << "└─";
-        for(int c = 0; c < puzzle.cols; ++c){
-            cout << (puzzle.edge[2*puzzle.rows][c].status);
-            if(c < puzzle.cols-1){
-                cout << "─┴─";
-            }else{
-                cout << "─┘\n";
-            }
-        }
+        cout << '\n';
 
     }
 
