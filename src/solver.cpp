@@ -25,6 +25,7 @@ class Vertex{
 private:
 public:
     int max_degree;
+    int degree;
     Vertex& operator=(int x){
         assert(0 <= x and x <= 4);
         this->max_degree = x;
@@ -175,27 +176,36 @@ public:
         if(out_of_range)  return;
 
         // Update the status of an edge and the max_degree of each vertex
-        int d_degree = (status == PROHIBITED) ? -1 : 0;
+        int d_max_degree = (status == PROHIBITED) ? -1 : 0;
+        int d_degree = (status == DECIDED) ? 1 : 0;
         switch(direction){
             case UP:
                 this->edge[2*r][c].status = status;
-                this->vertex[r][c].max_degree += d_degree;
-                this->vertex[r][c+1].max_degree += d_degree;
+                this->vertex[r][c].max_degree += d_max_degree;
+                this->vertex[r][c+1].max_degree += d_max_degree;
+                this->vertex[r][c].degree += d_degree;
+                this->vertex[r][c+1].degree += d_degree;
                 break;
             case LEFT:
                 this->edge[2*r+1][c].status = status;
-                this->vertex[r][c].max_degree += d_degree;
-                this->vertex[r+1][c].max_degree += d_degree;
+                this->vertex[r][c].max_degree += d_max_degree;
+                this->vertex[r+1][c].max_degree += d_max_degree;
+                this->vertex[r][c].degree += d_degree;
+                this->vertex[r+1][c].degree += d_degree;
                 break;
             case DOWN:
                 this->edge[2*r+2][c].status = status;
-                this->vertex[r+1][c].max_degree += d_degree;
-                this->vertex[r+1][c+1].max_degree += d_degree;
+                this->vertex[r+1][c].max_degree += d_max_degree;
+                this->vertex[r+1][c+1].max_degree += d_max_degree;
+                this->vertex[r+1][c].degree += d_degree;
+                this->vertex[r+1][c+1].degree += d_degree;
                 break;
             case RIGHT:
                 this->edge[2*r+1][c+1].status = status;
-                this->vertex[r][c+1].max_degree += d_degree;
-                this->vertex[r+1][c+1].max_degree += d_degree;
+                this->vertex[r][c+1].max_degree += d_max_degree;
+                this->vertex[r+1][c+1].max_degree += d_max_degree;
+                this->vertex[r][c+1].degree += d_degree;
+                this->vertex[r+1][c+1].degree += d_degree;
                 break;
         }
         
@@ -208,30 +218,36 @@ public:
                          or c < 0 or this->cols < c;
         if(out_of_range) return;
 
-        int d_degree = (status == PROHIBITED) ? -1 : 0;
+        int d_max_degree = (status == PROHIBITED) ? -1 : 0;
+        int d_degree = (status == DECIDED) ? 1 : 0;
         switch(direction){
             case UP:
                 if(r == 0 or this->edge[2*r-1][c].status == status) return;
                 this->edge[2*r-1][c].status = status;
-                this->vertex[r-1][c].max_degree += d_degree;
+                this->vertex[r-1][c].max_degree += d_max_degree;
+                this->vertex[r-1][c].degree += d_degree;
                 break;
             case LEFT:
                 if(c == 0 or this->edge[2*r][c-1].status == status) return;
                 this->edge[2*r][c-1].status = status;
-                this->vertex[r][c-1].max_degree += d_degree;
+                this->vertex[r][c-1].max_degree += d_max_degree;
+                this->vertex[r][c-1].degree += d_degree;
                 break;
             case DOWN:
                 if(r == this->rows or this->edge[2*r+1][c].status == status) return;
                 this->edge[2*r+1][c].status = status;
-                this->vertex[r+1][c].max_degree += d_degree;
+                this->vertex[r+1][c].max_degree += d_max_degree;
+                this->vertex[r+1][c].degree += d_degree;
                 break;
             case RIGHT:
                 if(c == this->cols or this->edge[2*r][c].status == status) return;
                 this->edge[2*r][c].status = status;
-                this->vertex[r][c+1].max_degree += d_degree;
+                this->vertex[r][c+1].max_degree += d_max_degree;
+                this->vertex[r][c+1].degree += d_degree;
                 break;
         }
-        this->vertex[r][c].max_degree += d_degree;
+        this->vertex[r][c].max_degree += d_max_degree;
+        this->vertex[r][c].degree += d_degree;
     }
 };
 
@@ -532,6 +548,7 @@ int Puzzle::load(string filename){
             if(r == 0 or r == this->rows) --max_deg;
             if(c == 0 or c == this->cols) --max_deg;
             this->vertex[r][c].max_degree = max_deg;
+            this->vertex[r][c].degree = 0;
         }
     }
 
@@ -560,8 +577,19 @@ int Puzzle::load(string filename){
 }
 
 void Puzzle::show(void){
+    for(int i = 0; i <= this->rows; ++i){
+        for(int j = 0; j <= this->cols; ++j){
+            cerr << this->vertex[i][j].degree << ' ';
+        }
+        cerr << '\n';
+    }
 
+    if(this->vertex[0][0].degree == 2){
+        cout << "\e[31m";
+    }
     cout << "┌";
+    cout << "\e[0m";
+
     for(int c = 0; c < this->cols; ++c){
         int e = static_cast<int>(this->get_edge(0, c, UP));
 
@@ -576,7 +604,11 @@ void Puzzle::show(void){
                 cout << "\e[31m───\e[0m";
                 break;
         }
+        if(this->vertex[0][c+1].degree == 2){
+            cout << "\e[31m";
+        }
         cout << ((c < this->cols-1) ? "┬" : "┐");
+        cout << "\e[0m";
     }
     cout << '\n';
 
@@ -623,7 +655,12 @@ void Puzzle::show(void){
         }
         cout << '\n';
 
+        if(this->vertex[r+1][0].degree == 2){
+            cout << "\e[31m";
+        }
         cout << ((r < this->rows-1) ? "├" : "└");
+        cout << "\e[0m";
+
         for(int c = 0; c < this->cols; ++c){
             e = static_cast<int>(this->get_edge(r, c, DOWN));
             switch(e){
@@ -638,11 +675,15 @@ void Puzzle::show(void){
                     break;
             }
 
+            if(this->vertex[r+1][c+1].degree == 2){
+                cout << "\e[31m";
+            }
             if(r < this->rows-1){
                 cout << ((c < this->cols-1) ? "┼" : "┤");
             }else{
                 cout << ((c < this->cols-1) ? "┴" : "┘");
             }
+            cout << "\e[0m";
         }
         cout << '\n';
     }
