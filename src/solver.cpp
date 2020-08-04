@@ -95,8 +95,8 @@ public:
 
     // get the status of an edge by specifying the position of a constraint and where edge locates
     Edge get_edge(int r, int c, int direction){
-        bool out_of_range = r < 0 or this->rows < r 
-                         or c < 0 or this->cols < c;
+        bool out_of_range = r < 0 or this->rows <= r 
+                         or c < 0 or this->cols <= c;
         if(out_of_range)  return Edge(-1);
         Edge e;
         switch(direction){
@@ -170,8 +170,8 @@ public:
     void set_edge(int r, int c, int direction, int status){
         // direction   [0:up] [1:left] [2:down] [3:left]
         assert(PROHIBITED <= status and status <= DECIDED);
-        bool out_of_range = r < 0 or this->rows < r 
-                         or c < 0 or this->cols < c;
+        bool out_of_range = r < 0 or this->rows <= r 
+                         or c < 0 or this->cols <= c;
         if(out_of_range)  return;
 
         // Update the status of an edge and the max_degree of each vertex
@@ -268,7 +268,6 @@ private:
                             break;
                     }
                 }
-                cerr << r << ", " << c << ": " << prohibited << ' ' << decided << '\n';
                 switch(decided){
                     case 0:
                         break;
@@ -355,6 +354,45 @@ private:
                 }
             }
         }
+    }
+
+
+
+    int satisfy_constraint(){
+        for(int r = 0; r < puzzle.rows; ++r){
+            for(int c = 0; c < puzzle.cols; ++c){
+                int prohibited = 0, decided = 0;
+                for(int i = 0; i < 4; ++i){
+                    int e = puzzle.get_edge(r, c, i);
+                    switch(e){
+                        case PROHIBITED:
+                            ++prohibited;
+                            break;
+                        case DECIDED:
+                            ++decided;
+                            break;
+                    }
+                }
+                bool satisfiable = puzzle.constraint[r][c] >= decided or puzzle.constraint[r][c] <= 4-prohibited;
+                if(!satisfiable) return -1;
+                if(puzzle.constraint[r][c] == decided){
+                    for(int i = 0; i < 4; ++i){
+                        if(puzzle.get_edge(r, c, i) == PENDING){
+                            puzzle.set_edge(r, c, i, PROHIBITED);
+                        }
+
+                    }
+                }
+                if(puzzle.constraint[r][c] == 4-prohibited){
+                    for(int i = 0; i < 4; ++i){
+                        if(puzzle.get_edge(r, c, i) == PENDING){
+                            puzzle.set_edge(r, c, i, DECIDED);
+                        }
+                    }
+                }
+            }
+        }
+        return 0;
     }
 
     void show_max_degree(){
@@ -459,16 +497,16 @@ public:
             this->prune_deadend();
             satisfiable |= this->decide_by_prohibited();
             satisfiable |= this->extend_decided();
-            cerr << i << "=====================" << '\n';
-            this->puzzle.show();
-            this->show_max_degree();
-            this->show_status();
+            satisfiable |= this->satisfy_constraint();
 
             if(satisfiable < 0){
                 cout << "This puzzle is unsatisfiable." << '\n';
                 return;
             }
         }
+        this->puzzle.show();
+        this->show_max_degree();
+        this->show_status();
     }
 
 };
