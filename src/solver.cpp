@@ -118,8 +118,8 @@ public:
 
     // get the status of an edge by specifying the position of a vertex and where edge locates
     Edge get_edge_v(int r, int c, int direction){
-        bool out_of_range = r < 0 or this->rows <= r 
-                         or c < 0 or this->cols <= c;
+        bool out_of_range = r < 0 or this->rows < r 
+                         or c < 0 or this->cols < c;
         if(out_of_range)  return Edge(-1);
         Edge e;
         switch(direction){
@@ -204,8 +204,8 @@ public:
     // set the status of an edge by specifying the position of a vertex and where edge locates
     void set_edge_v(int r, int c, int direction, int status){
         assert(PROHIBITED <= status and status <= DECIDED);
-        bool out_of_range = r < 0 or this->rows <= r 
-                         or c < 0 or this->cols <= c;
+        bool out_of_range = r < 0 or this->rows < r 
+                         or c < 0 or this->cols < c;
         if(out_of_range) return;
 
         int d_degree = (status == PROHIBITED) ? -1 : 0;
@@ -268,8 +268,7 @@ private:
                             break;
                     }
                 }
-                cerr << "-----"<<'\n';
-                cerr << r << ' ' << c << ": " << decided<< '\n';
+                cerr << r << ", " << c << ": " << prohibited << ' ' << decided << '\n';
                 switch(decided){
                     case 0:
                         break;
@@ -456,7 +455,7 @@ public:
     void solve(){
         int satisfiable = 0;
         this->prune_zero();
-        for(int i = 0; i < 10; ++i){
+        for(int i = 0; i < 5; ++i){
             this->prune_deadend();
             satisfiable |= this->decide_by_prohibited();
             satisfiable |= this->extend_decided();
@@ -491,17 +490,17 @@ int Puzzle::load(string filename){
     // init vertex
     for(int r = 0; r <= this->rows; ++r){
         for(int c = 0; c <= this->cols; ++c){
-            int deg = 4;
-            if(r == 0 or r == this->rows) --deg;
-            if(c == 0 or c == this->cols) --deg;
-            vertex[r][c].max_degree = deg;
+            int max_deg = 4;
+            if(r == 0 or r == this->rows) --max_deg;
+            if(c == 0 or c == this->cols) --max_deg;
+            this->vertex[r][c].max_degree = max_deg;
         }
     }
 
     // init edge
     for(int r = 0; r <= 2*this->rows; ++r){
         for(int c = 0; c <= this->cols; ++c){
-            edge[r][c] = 0;
+            this->edge[r][c].status = 0;
         }
     }
 
