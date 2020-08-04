@@ -24,18 +24,18 @@ using namespace std;
 class Vertex{
 private:
 public:
-    int degree;
+    int max_degree;
     Vertex& operator=(int x){
         assert(0 <= x and x <= 4);
-        this->degree = x;
+        this->max_degree = x;
         return *this;
     }
     Vertex& operator--(int x){
-        this->degree = this->degree - 1;
+        this->max_degree = this->max_degree - 1;
         return *this;
     }
     Vertex& operator-=(int x){
-        this->degree = this->degree - x;
+        this->max_degree = this->max_degree - x;
         return *this;
     }
     
@@ -174,28 +174,28 @@ public:
                          or c < 0 or this->cols < c;
         if(out_of_range)  return;
 
-        // Update the status of an edge and the degree of each vertex
+        // Update the status of an edge and the max_degree of each vertex
         int d_degree = (status == PROHIBITED) ? -1 : 0;
         switch(direction){
             case UP:
                 this->edge[2*r][c].status = status;
-                this->vertex[r][c].degree += d_degree;
-                this->vertex[r][c+1].degree += d_degree;
+                this->vertex[r][c].max_degree += d_degree;
+                this->vertex[r][c+1].max_degree += d_degree;
                 break;
             case LEFT:
                 this->edge[2*r+1][c].status = status;
-                this->vertex[r][c].degree += d_degree;
-                this->vertex[r+1][c].degree += d_degree;
+                this->vertex[r][c].max_degree += d_degree;
+                this->vertex[r+1][c].max_degree += d_degree;
                 break;
             case DOWN:
                 this->edge[2*r+2][c].status = status;
-                this->vertex[r+1][c].degree += d_degree;
-                this->vertex[r+1][c+1].degree += d_degree;
+                this->vertex[r+1][c].max_degree += d_degree;
+                this->vertex[r+1][c+1].max_degree += d_degree;
                 break;
             case RIGHT:
                 this->edge[2*r+1][c+1].status = status;
-                this->vertex[r][c+1].degree += d_degree;
-                this->vertex[r+1][c+1].degree += d_degree;
+                this->vertex[r][c+1].max_degree += d_degree;
+                this->vertex[r+1][c+1].max_degree += d_degree;
                 break;
         }
         
@@ -213,25 +213,25 @@ public:
             case UP:
                 if(r == 0 or this->edge[2*r-1][c].status == status) return;
                 this->edge[2*r-1][c].status = status;
-                this->vertex[r-1][c].degree += d_degree;
+                this->vertex[r-1][c].max_degree += d_degree;
                 break;
             case LEFT:
                 if(c == 0 or this->edge[2*r][c-1].status == status) return;
                 this->edge[2*r][c-1].status = status;
-                this->vertex[r][c-1].degree += d_degree;
+                this->vertex[r][c-1].max_degree += d_degree;
                 break;
             case DOWN:
                 if(r == this->rows or this->edge[2*r+1][c].status == status) return;
                 this->edge[2*r+1][c].status = status;
-                this->vertex[r+1][c].degree += d_degree;
+                this->vertex[r+1][c].max_degree += d_degree;
                 break;
             case RIGHT:
                 if(c == this->cols or this->edge[2*r][c].status == status) return;
                 this->edge[2*r][c].status = status;
-                this->vertex[r][c+1].degree += d_degree;
+                this->vertex[r][c+1].max_degree += d_degree;
                 break;
         }
-        this->vertex[r][c].degree += d_degree;
+        this->vertex[r][c].max_degree += d_degree;
     }
 };
 
@@ -275,7 +275,7 @@ private:
                         break;
                     case 1:
                         // When maxdegree is 2 and degree is 1, an edge must be decided
-                        if(puzzle.vertex[r][c].degree == 2){
+                        if(puzzle.vertex[r][c].max_degree == 2){
                             for(int i = 0; i < 4; ++i){
                                 if(puzzle.get_edge_v(r, c, i) == PENDING){
                                     puzzle.set_edge_v(r, c, i, DECIDED);
@@ -328,8 +328,8 @@ private:
 
         for(int r = 0; r <= puzzle.rows; ++r){
             for(int c = 0; c <= puzzle.cols; ++c){
-                if(puzzle.vertex[r][c].degree == DECIDED){
-                    --puzzle.vertex[r][c].degree;
+                if(puzzle.vertex[r][c].max_degree == DECIDED){
+                    --puzzle.vertex[r][c].max_degree;
                     q.emplace(r, c);
                 }
             }
@@ -346,11 +346,11 @@ private:
 
                 bool line_prohibited = puzzle.get_edge(r, c, R, C) == PROHIBITED;
                 if(line_prohibited) continue;
-                if(puzzle.vertex[R][C].degree > 0){
-                    --puzzle.vertex[R][C].degree;
+                if(puzzle.vertex[R][C].max_degree > 0){
+                    --puzzle.vertex[R][C].max_degree;
                     puzzle.set_edge(r, c, R, C, PROHIBITED);
                 }
-                bool degree_is_1 = puzzle.vertex[R][C].degree == 1;
+                bool degree_is_1 = puzzle.vertex[R][C].max_degree == 1;
                 if(degree_is_1){
                     q.emplace(R, C);
                 }
@@ -358,10 +358,10 @@ private:
         }
     }
 
-    void show_degree(){
+    void show_max_degree(){
         for(int r = 0; r <= puzzle.rows; ++r){
             for(int c = 0; c <= puzzle.cols; ++c){
-                cout << puzzle.vertex[r][c].degree;
+                cout << puzzle.vertex[r][c].max_degree;
                 if(c < puzzle.cols)  cout << "───";
             }
             cout << '\n';
@@ -462,7 +462,7 @@ public:
             satisfiable |= this->extend_decided();
             cerr << i << "=====================" << '\n';
             this->puzzle.show();
-            this->show_degree();
+            this->show_max_degree();
             this->show_status();
 
             if(satisfiable < 0){
@@ -494,7 +494,7 @@ int Puzzle::load(string filename){
             int deg = 4;
             if(r == 0 or r == this->rows) --deg;
             if(c == 0 or c == this->cols) --deg;
-            vertex[r][c].degree = deg;
+            vertex[r][c].max_degree = deg;
         }
     }
 
@@ -523,6 +523,7 @@ int Puzzle::load(string filename){
 }
 
 void Puzzle::show(void){
+
     cout << "┌";
     for(int c = 0; c < this->cols; ++c){
         int e = static_cast<int>(this->get_edge(0, c, UP));
