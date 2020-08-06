@@ -1,7 +1,6 @@
-6 7
-x02x1x3
-0xxxxxx
-xx03x31
-30x0x30
-31x2xxx
-3x3x02x
+5 5
+322xx
+2xx13
+32xx1
+30xx2
+xx3xx
