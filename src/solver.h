@@ -8,7 +8,7 @@ class Solver{
 private:
     Puzzle puzzle;
 
-    bool satisfied();
+    int satisfied();
 
     void prune_zero();
     int extend_decided();

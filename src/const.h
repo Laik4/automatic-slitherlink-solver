@@ -9,3 +9,8 @@
 #define PENDING     0
 #define DECIDED     1
 
+
+#define UNSATISFIED -1
+#define SOLVED       0
+#define SATISFIED    1
+

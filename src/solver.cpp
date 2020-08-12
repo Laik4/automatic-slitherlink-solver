@@ -6,8 +6,67 @@
 #include "solver.h"
 #include "const.h"
 
-bool Solver::satisfied(){
-    return true;
+int Solver::trace_loop(){
+// TODO: add this function to solver.h
+    vector<vector<bool>> visited(puzzle.rows+1, vector<bool>(puzzle.cols+1, false));
+
+    // select init edge from unvisited one
+    // trace loop until come back to init edge or reach deadend
+    // continue until visit all edges
+    
+
+
+}
+
+int Solver::satisfied(){
+
+    // check if degree <= 2 
+    for(int r = 0; r < puzzle.rows; ++r){
+        for(int c = 0; c < puzzle.cols; ++c){
+            if(puzzle.vertex[r][c].degree >= 3){
+                return UNSATISFIED;
+            }
+        }
+    }
+
+    bool all_satisfied = true;
+
+    // check if constraints are satisfied
+    for(int r = 0; r < puzzle.rows; ++r){
+        for(int c = 0; c < puzzle.cols; ++c){
+            if(puzzle.constraint[r][c] == 0){
+                continue;
+            }
+            int prohibited = 0;
+            int decided = 0;
+            for(int i = 0; i < 4; ++i){
+                switch(puzzle.get_edge(r, c, i)){
+                    case PROHIBITED:
+                        ++prohibited;
+                        break;
+                    case DECIDED:
+                        ++decided;
+                        break;
+                }
+                if(all_satisified and puzzle.constraint[r][c] != decided){
+                    all_satisfied = false;
+                }
+                if(puzzle.constraint[r][c] < decided or 4-puzzle.constraint[r][c] < prohibited){
+                    return UNSATISFIED;
+                }
+            }
+        }
+    }
+
+    // check if there's any loop
+    // if all_satisfied == false and there's only 1 loop, the puzzle is solved.
+
+
+    
+
+
+    // otherwise, the constraints are satisfied so far.
+    return SATISFIED;
 }
 
 void Solver::prune_zero(){
